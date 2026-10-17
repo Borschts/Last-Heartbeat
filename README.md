@@ -25,6 +25,32 @@ Configure these features through the Telegram control bot's menus.
 - Docker Engine and Docker Compose.
 - A Telegram account, an API ID and API hash from [my.telegram.org](https://my.telegram.org), and a bot token from [BotFather](https://t.me/BotFather).
 
+## Setup
+
+```sh
+git clone https://github.com/Borschts/Last-Heartbeat.git
+cd Last-Heartbeat
+cp .env.example .env
+mkdir -p secrets
+```
+
+Fill in the API ID, API hash and bot token in `.env`. Leave `OWNER_ID` empty for now.
+
+```sh
+docker compose build
+docker compose run --rm heartbeat login
+```
+
+Log in with your phone number and Telegram login code. Copy the printed `OWNER_ID` into `.env`, then start the service:
+
+```sh
+docker compose up -d
+```
+
+Open your control bot and send `/start`. Add your messages, trusted contacts and groups. Create a recovery code and keep a copy somewhere you can reach without this Telegram account. Once the userbot has been logged in for 24 hours, press **啟用** to start the timer.
+
+See the [usage guide](docs/usage.md) for commands, ownership transfers and backups.
+
 ## FAQ
 
 ### How do I cancel a takeover if I just forgot to check in?
@@ -41,7 +67,7 @@ Once connected again, the userbot receives the messages it missed and checks for
 
 Only groups selected by the account owner. Listed contacts can choose a member of the group to take over.
 
-[Transferring ownership](https://core.telegram.org/method/channels.editCreator) requires the account's Telegram two-step verification password, supplied through a local file during setup. If no password is provided, or Telegram refuses the transfer, the userbot grants ALL the available administrator rights with anonymity turned off.
+[Transferring ownership](https://core.telegram.org/method/messages.editChatCreator) requires the account's Telegram two-step verification password, supplied through a local file during setup. If no password is provided, or Telegram's two-step verification restrictions prevent the transfer, the userbot grants all available administrator rights with anonymity turned off.
 
 ### Can it sign out every other device immediately?
 
@@ -50,6 +76,24 @@ It will try when takeover begins, then keep checking for new logins. Telegram re
 ### Where are my account details and messages stored?
 
 Data stays on the host where you run the userbot and is not encrypted automatically. Keep the data directory and backups private. The `.session` files can be used to log in to your Telegram account.
+
+### What happens to messages missed during an outage?
+
+For a recurring message, only the most recent missed occurrence is sent. Older occurrences are skipped so the recipient does not receive several at once.
+
+If Telegram does not confirm a send, the record is marked `uncertain`. It is left for you to check instead of being sent again automatically.
+
+## Development
+
+Requires Python 3.12 or later.
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+pip install -e '.[dev]'
+ruff check .
+pytest
+```
 
 ## License
 

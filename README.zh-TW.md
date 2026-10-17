@@ -25,6 +25,32 @@ Last Heartbeat 是一個自行部署的 Telegram userbot，用於在使用者長
 - Docker Engine 及 Docker Compose。
 - Telegram 帳號、從 [my.telegram.org](https://my.telegram.org) 取得的 API ID 和 API hash，以及由 [BotFather](https://t.me/BotFather) 建立的 bot token。
 
+## 安裝
+
+```sh
+git clone https://github.com/Borschts/Last-Heartbeat.git
+cd Last-Heartbeat
+cp .env.example .env
+mkdir -p secrets
+```
+
+在 `.env` 填入 API ID、API hash 和 bot token，`OWNER_ID` 先留空。
+
+```sh
+docker compose build
+docker compose run --rm heartbeat login
+```
+
+按提示輸入電話號碼和 Telegram 登入驗證碼。把顯示的 `OWNER_ID` 填回 `.env`，然後啟動：
+
+```sh
+docker compose up -d
+```
+
+打開自己的控制 bot，發送 `/start`。在選單加入預留訊息、親友和群組，再設定解除碼。請另外保存解除碼，確保登不進這個 Telegram 帳號時也能找到。userbot 登入滿 24 小時後，按「啟用」開始計時。
+
+指令、群主轉移和備份方式見[使用說明](docs/usage.zh-TW.md)。
+
 ## FAQ
 
 ### 如果只是忘了確認，怎樣取消接管？
@@ -35,13 +61,13 @@ Last Heartbeat 是一個自行部署的 Telegram userbot，用於在使用者長
 
 ### 主機斷線期間超過了 72 小時，會怎樣處理？
 
-恢復連線後，userbot 會先接收斷線期間的訊息，檢查有沒有漏收的 Heartbeat。若仍未收到若期間未收到任何Heartbeat，會補發提醒，再等 24 小時才接管。
+恢復連線後，userbot 會先檢查有沒有漏收的 Heartbeat。如果仍然沒有確認，會再提醒一次，留出 24 小時才接管。
 
 ### 親友可以接管哪些群組？
 
 只有本人事先選好的群組。名單內的親友可以指定一位群內成員接任。
 
-[轉移群主](https://core.telegram.org/method/channels.editCreator)需要帳號的 Telegram 兩步驗證密碼，可在部署時透過本機檔案提供。若未提供密碼，或 Telegram 不允許轉移，則改為授予所有可用的管理員權限，並關閉匿名。
+[轉移群主](https://core.telegram.org/method/messages.editChatCreator)需要帳號的 Telegram 兩步驗證密碼，可在部署時透過本機檔案提供。如果沒有提供密碼，或 Telegram 的兩步驗證限制不允許轉移，便改為授予所有可用的管理員權限，並關閉匿名。
 
 ### 能立即踢走所有其他裝置嗎？
 
@@ -50,6 +76,24 @@ Last Heartbeat 是一個自行部署的 Telegram userbot，用於在使用者長
 ### 帳號和訊息資料放在哪裏？
 
 資料保存在自行部署的主機上，不會自動加密。請妥善保管資料目錄和備份，其中的 `.session` 檔案可以直接用來登入 Telegram 帳號。
+
+### 斷線期間沒送出的訊息會怎樣？
+
+按月重複發送的訊息只會補送最近一次，較早的會略過，避免對方一次收到好幾則。
+
+如果 Telegram 沒有回覆發送結果，紀錄會顯示 `uncertain`。這類訊息會留待人工查看，不會自動重送。
+
+## 開發
+
+需要 Python 3.12 或以上。
+
+```sh
+python -m venv .venv
+. .venv/bin/activate
+pip install -e '.[dev]'
+ruff check .
+pytest
+```
 
 ## 授權
 
